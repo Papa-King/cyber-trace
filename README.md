@@ -2,6 +2,8 @@
 
 **A cinematic, keyboard-first investigation game.** Track a suspect through intercepted logs, traffic cameras, and a final field operation by typing realistic command-shaped lines.
 
+**[Play in your browser](https://papa-king.github.io/cyber-trace/)**
+
 ![Cyber Trace gameplay](docs/gameplay.png)
 
 ## Play locally
@@ -13,6 +15,8 @@ npm start
 ```
 
 Open [http://localhost:4173](http://localhost:4173). You can also run `python3 -m http.server 4173` directly.
+
+Open the game through the live link or a local server. Opening `index.html` directly as a `file://` page can prevent JavaScript modules from loading in Chrome.
 
 The displayed commands are **game prompts only**. They are simulated in the browser and are never executed on your computer.
 
