@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071014" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23071014'/%3E%3Cpath d='M18 12h28v7H25v26h21v7H18z' fill='%2369e1d5'/%3E%3C/svg%3E" />
+    <meta
+      name="description"
+      content="Cyber Trace is a keyboard-first cyberpunk investigation game. Type commands to track a fugitive across the city."
+    />
+    <title>Cyber Trace — Type to Track</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#game-input">Skip to command input</a>
+    <div class="city-map" aria-hidden="true">
+      <svg class="city-map-art" viewBox="0 0 1440 960" preserveAspectRatio="xMidYMid slice">
+        <defs><filter id="map-glow"><feGaussianBlur stdDeviation="6" /></filter></defs>
+        <path class="map-river" d="M-80 670 C180 610 290 840 550 736 S900 500 1530 750" />
+        <g class="map-districts">
+          <path d="M35 75 L385 43 489 188 362 365 74 335Z" />
+          <path d="M508 69 L820 42 962 164 802 386 510 340Z" />
+          <path d="M1010 46 L1430 77 1361 392 996 327Z" />
+          <path d="M120 413 L418 390 559 584 390 763 46 708Z" />
+          <path d="M650 428 L1012 393 1173 675 823 823 558 682Z" />
+          <path d="M1121 451 L1510 486 1433 903 1121 832Z" />
+        </g>
+        <g class="map-streets">
+          <path d="M-20 182 C280 218 418 104 688 163 S1150 276 1490 210" />
+          <path d="M-20 383 C230 328 451 455 667 389 S1030 295 1490 431" />
+          <path d="M-20 543 C241 577 438 503 681 583 S1111 609 1490 552" />
+          <path d="M-20 810 C268 737 380 891 655 762 S1040 781 1490 834" />
+          <path d="M245 -50 C198 172 326 351 266 570 S359 781 327 1010" />
+          <path d="M564 -40 C641 228 510 434 632 668 S681 817 623 1010" />
+          <path d="M952 -40 C878 214 992 351 904 542 S1014 812 962 1010" />
+          <path d="M1247 -40 C1173 225 1282 490 1235 635 S1324 817 1280 1010" />
+          <path class="map-minor-streets" d="M77 -10 L107 1000 M424 -10 L469 1000 M761 -10 L818 1000 M1091 -10 L1150 1000 M-20 85 L1490 132 M-20 296 L1490 345 M-20 688 L1490 701 M-20 922 L1490 942" />
+        </g>
+        <path class="map-route-glow" d="M225 660 C362 628 375 528 483 485 S687 466 796 386 S991 352 1111 411" />
+        <path class="map-route" id="city-trace-route" pathLength="100" d="M225 660 C362 628 375 528 483 485 S687 466 796 386 S991 352 1111 411" />
+        <g class="map-intercept-layer">
+          <circle class="map-ring" cx="796" cy="386" r="78" /><circle class="map-ring" cx="796" cy="386" r="133" />
+          <circle class="map-node" cx="225" cy="660" r="5" /><circle class="map-node" cx="796" cy="386" r="5" />
+          <text x="756" y="287">NEON DISTRICT 04</text><text x="215" y="690">TRACE ORIGIN</text>
+        </g>
+        <g class="map-query-layer">
+          <path class="map-camera-cone" d="M764 406 L631 622 Q795 650 930 561Z" />
+          <path class="map-camera-cone" d="M1050 366 L928 183 Q1082 202 1183 263Z" />
+          <circle class="map-camera-dot" cx="764" cy="406" r="7" /><circle class="map-camera-dot" cx="1050" cy="366" r="7" />
+          <text x="777" y="429">CAM C17 / LIVE</text><text x="1064" y="385">CAM C18</text>
+        </g>
+        <g class="map-capture-layer">
+          <circle class="map-perimeter" cx="1111" cy="411" r="117" /><circle class="map-perimeter" cx="1111" cy="411" r="72" />
+          <path class="map-unit-line" d="M889 539 L1020 454 M1234 286 L1157 361" />
+          <circle class="map-unit-dot" cx="889" cy="539" r="6" /><circle class="map-unit-dot" cx="1234" cy="286" r="6" />
+          <text x="852" y="566">UNIT-7</text><text x="1220" y="270">DRONE D2</text>
+        </g>
+        <circle class="map-target-halo" cx="1111" cy="411" r="21" /><circle class="map-target" cx="1111" cy="411" r="6" />
+        <text class="map-target-label" x="1130" y="390">LAST SIGNAL / GHOST</text>
+      </svg>
+      <div class="map-vignette"></div>
+      <div class="map-coordinate" id="map-coordinate">51° / EAST GRID<br />TRACKING: ACTIVE</div>
+    </div>
+
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Cyber Trace home">
+          <span class="brand-mark" aria-hidden="true">CT</span>
+          <span>
+            <strong>CYBER TRACE</strong>
+            <small>CYBERCRIME RESPONSE DIVISION</small>
+          </span>
+        </a>
+        <div class="system-status" aria-label="System status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>SECURE LINK</span>
+          <button class="icon-button" id="sound-toggle" type="button" aria-pressed="true" aria-label="Mute sound">
+            <span aria-hidden="true">♪</span><span class="sound-label">Sound</span>
+          </button>
+          <button class="icon-button" id="motion-toggle" type="button" aria-pressed="true" aria-label="Reduce motion">
+            <span aria-hidden="true">≈</span><span class="sound-label">Motion</span>
+          </button>
+        </div>
+      </header>
+      <div class="telemetry-strip" aria-hidden="true">
+        <span>SYS://CITYGRID/EAST-04 <i></i> ENCRYPTED FEED ACTIVE</span>
+        <span>CASE CT-0917 <i></i> TRACE LINK: STABLE</span>
+      </div>
+
+      <section id="start-screen" class="screen start-screen" aria-labelledby="start-title">
+        <div class="start-copy">
+          <p class="eyebrow">CASE FILE // CT-0917</p>
+          <h1 id="start-title">The chase is on.<br /><span>Type to close in.</span></h1>
+          <p class="lede">
+            A fugitive known as GHOST is moving through the city grid. Read the logs, query the cameras, and issue field commands. Every accurate keystroke closes the gap.
+          </p>
+          <fieldset class="difficulty-picker">
+            <legend>CHOOSE DIFFICULTY</legend>
+            <div class="difficulty-options">
+              <label class="demo-option"><input type="radio" name="difficulty" value="demo" /><span><b>DEMO RUN</b><small>3 correct commands · no time limit</small><em>SHOWCASE</em></span></label>
+              <label><input type="radio" name="difficulty" value="rookie" /><span><b>ROOKIE</b><small>0.85× score</small></span></label>
+              <label><input type="radio" name="difficulty" value="operative" checked /><span><b>OPERATIVE</b><small>1× score</small></span></label>
+              <label><input type="radio" name="difficulty" value="expert" /><span><b>EXPERT</b><small>1.25× score</small></span></label>
+            </div>
+            <p id="difficulty-description" aria-live="polite">Balanced pursuit · standard timing</p>
+          </fieldset>
+          <button class="primary-button" id="start-button" type="button">
+            <span>Start tracing</span><kbd>Enter</kbd>
+          </button>
+          <p class="microcopy">KEYBOARD FIRST · SOUND AND MOTION OPTIONAL</p>
+        </div>
+
+        <aside class="case-card" aria-label="Case brief">
+          <div class="case-card-head">
+            <span>ACTIVE WARRANT</span><span class="case-id">#0917</span>
+          </div>
+          <div class="suspect-visual" aria-hidden="true">
+            <div class="scan-line"></div>
+            <div class="suspect-glyph">?</div>
+            <span class="corner corner-a"></span><span class="corner corner-b"></span>
+            <span class="corner corner-c"></span><span class="corner corner-d"></span>
+          </div>
+          <dl class="case-data">
+            <div><dt>TARGET</dt><dd>GHOST</dd></div>
+            <div><dt>THREAT LEVEL</dt><dd class="danger-text">HIGH</dd></div>
+            <div><dt>LAST SIGNAL</dt><dd>NEON DISTRICT 04</dd></div>
+          </dl>
+        </aside>
+
+        <div class="mission-steps" aria-label="Mission stages">
+          <article><span>01</span><div><h2>INTERCEPT</h2><p>Filter captured traffic</p></div></article>
+          <article><span>02</span><div><h2>CAMERA QUERY</h2><p>Trace the CCTV network</p></div></article>
+          <article><span>03</span><div><h2>FIELD COMMAND</h2><p>Coordinate the arrest</p></div></article>
+        </div>
+      </section>
+
+      <section id="game-screen" class="screen game-screen" hidden aria-labelledby="phase-title">
+        <div class="mission-bar">
+          <div>
+            <p class="eyebrow" id="phase-kicker">PHASE 01 / 03</p>
+            <h1 id="phase-title">Intercept traffic</h1>
+          </div>
+          <div class="timer-block">
+            <span>TIME LEFT</span>
+            <strong id="timer" aria-live="off">01:15</strong>
+          </div>
+        </div>
+
+        <div class="stage-progress" aria-label="Stage progress">
+          <div class="stage-node active" data-stage="0"><span>1</span><b>INTERCEPT</b></div>
+          <div class="stage-line"><i></i></div>
+          <div class="stage-node" data-stage="1"><span>2</span><b>QUERY</b></div>
+          <div class="stage-line"><i></i></div>
+          <div class="stage-node" data-stage="2"><span>3</span><b>CAPTURE</b></div>
+        </div>
+
+        <div class="game-layout">
+          <section class="terminal-card" aria-label="Typing mission">
+            <div class="terminal-head">
+              <span><i aria-hidden="true"></i> <span id="terminal-mode">SHELL / LOG ANALYSIS</span></span>
+              <span id="task-count">COMMAND 1 / 8</span>
+            </div>
+            <div class="task-context">
+              <p id="phase-description">Filter captured traffic to locate GHOST's relay.</p>
+              <div class="command-output" aria-live="polite" aria-atomic="true">
+                <div class="output-heading"><span>LAST RESULT</span><em id="output-status">AWAITING DATA</em></div>
+                <pre id="output-lines">No evidence yet. Run the command below.</pre>
+              </div>
+              <span class="code-label" aria-hidden="true">TYPE THE EXACT LINE</span>
+              <div id="target-text" class="target-text" aria-live="polite" aria-atomic="true"></div>
+              <div id="command-hint" class="command-hint">Match case, spaces, and punctuation</div>
+            </div>
+            <label class="input-wrap" for="game-input">
+              <span class="input-label">COMMAND</span>
+              <input
+                id="game-input"
+                type="text"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                inputmode="text"
+                aria-describedby="input-feedback"
+              />
+              <span class="input-cursor" aria-hidden="true"></span>
+            </label>
+            <div id="input-feedback" class="input-feedback" aria-live="polite">Awaiting input…</div>
+            <p class="keyboard-tip"><kbd>Esc</kbd> pause <span>·</span> Exact matches submit automatically</p>
+          </section>
+
+          <aside class="intel-column">
+            <section class="chase-card" aria-label="Pursuit progress">
+              <div class="panel-title"><span>PURSUIT STATUS</span><em id="distance-label">GAP 780m</em></div>
+              <div class="route-map" aria-hidden="true">
+                <svg viewBox="0 0 500 116" preserveAspectRatio="none">
+                  <path class="road" d="M8 86 C85 35 121 104 198 56 S324 12 374 54 S436 95 493 26" />
+                  <path id="trace-path" class="trace" pathLength="100" d="M8 86 C85 35 121 104 198 56 S324 12 374 54 S436 95 493 26" />
+                </svg>
+                <div class="runner police" id="police-marker"><span>CT</span></div>
+                <div class="runner suspect" id="suspect-marker"><span>G</span></div>
+              </div>
+              <div class="pressure-bars">
+                <div>
+                  <span><b>YOUR TRACE</b><output id="player-percent">12%</output></span>
+                  <div class="meter player-meter"><i id="player-bar"></i></div>
+                </div>
+                <div>
+                  <span><b>GHOST'S ESCAPE</b><output id="suspect-percent">18%</output></span>
+                  <div class="meter suspect-meter"><i id="suspect-bar"></i></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="stats-grid" aria-label="Live typing stats">
+              <div><span>WPM</span><strong id="wpm">0</strong><small>SPEED</small></div>
+              <div><span>ACC</span><strong id="accuracy">100%</strong><small>ACCURACY</small></div>
+              <div><span>COMBO</span><strong id="combo">×0</strong><small>STREAK</small></div>
+            </section>
+
+            <section class="intel-log" aria-label="Investigation log">
+              <div class="panel-title"><span>CASE LOG</span><em>LIVE</em></div>
+              <ul id="log-list" aria-live="polite"></ul>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="intro-screen" class="intro-screen" role="dialog" aria-modal="true" aria-labelledby="intro-title" hidden>
+        <div class="intro-shot intro-shot-relay" aria-hidden="true"><img src="./assets/intro-relay-v2.png" alt="" /></div>
+        <div class="intro-shot intro-shot-chase" aria-hidden="true"><img src="./assets/intro-chase-v2.png" alt="" /></div>
+        <div class="intro-shot intro-shot-control" aria-hidden="true"><img src="./assets/intro-control-v2.png" alt="" /></div>
+        <div class="intro-film-grain" aria-hidden="true"></div>
+        <div class="intro-cut-flash" aria-hidden="true"></div>
+        <div class="intro-letterbox intro-letterbox-top" aria-hidden="true"></div>
+        <div class="intro-letterbox intro-letterbox-bottom" aria-hidden="true"></div>
+        <div class="intro-hud"><span>CT / CASE 0917</span><span id="intro-feed-line">RELAY / LIVE</span></div>
+        <div class="intro-caption" aria-live="polite" aria-atomic="true">
+          <p id="intro-kicker">CONTROL / RADIO</p>
+          <h2 id="intro-title">Unauthorized relay on Neon-04.</h2>
+        </div>
+        <div class="intro-controls">
+          <div class="intro-progress" role="progressbar" aria-label="Intro progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="intro-progress-fill"></span></div>
+          <span class="intro-shot-index" id="intro-progress-label">0%</span>
+          <button class="intro-skip" id="intro-skip" type="button">Skip <kbd>Esc</kbd></button>
+          <button class="primary-button intro-continue" id="intro-continue" type="button" hidden><span>Begin operation</span><kbd>Enter</kbd></button>
+        </div>
+      </section>
+
+      <section id="success-sequence" class="success-sequence" role="dialog" aria-modal="true" aria-labelledby="success-title" hidden>
+        <div class="success-topline"><span>CT-0917 / LIVE OPERATION</span><span id="success-feed">SATELLITE / EAST GRID</span></div>
+        <div class="success-map" aria-hidden="true">
+          <img src="./assets/capture-aerial-v2.png" alt="" />
+          <svg viewBox="0 0 900 540" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <pattern id="success-grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M 42 0 L 0 0 0 42" fill="none" stroke="#6ae9d1" stroke-opacity=".12" stroke-width="1" /></pattern>
+              <filter id="success-glow"><feGaussianBlur stdDeviation="5" /></filter>
+            </defs>
+            <rect width="900" height="540" fill="url(#success-grid)" />
+            <path class="success-street" d="M0 115 L900 195 M0 330 L900 286 M100 0 L230 540 M490 0 L450 540 M775 0 L660 540" />
+            <path class="success-river" d="M0 480 C210 418 304 500 430 410 S680 286 900 352" />
+            <path class="success-route-base" d="M125 405 C215 390 226 260 342 271 S468 344 520 254 S636 178 706 218" />
+            <path class="success-route-glow" d="M125 405 C215 390 226 260 342 271 S468 344 520 254 S636 178 706 218" />
+            <path class="success-route" d="M125 405 C215 390 226 260 342 271 S468 344 520 254 S636 178 706 218" />
+            <circle class="success-node success-node-one" cx="125" cy="405" r="6" />
+            <circle class="success-node success-node-two" cx="342" cy="271" r="6" />
+            <circle class="success-node success-node-three" cx="520" cy="254" r="6" />
+            <circle class="success-perimeter" cx="706" cy="218" r="80" />
+            <circle class="success-target-halo" cx="706" cy="218" r="24" />
+            <circle class="success-target" cx="706" cy="218" r="7" />
+            <path class="success-crosshair" d="M706 111 V152 M706 284 V325 M599 218 H640 M772 218 H813" />
+            <text x="94" y="435">SIGNAL / PORT-04</text><text x="318" y="246">CAM / C17</text><text x="685" y="105">B12 / INTERCEPT</text>
+          </svg>
+          <div class="success-target-tag"><span>TARGET ID</span><strong>GHOST</strong><small id="success-target-state">SIGNAL ACTIVE</small></div>
+        </div>
+        <div class="success-photo success-photo-wide" aria-hidden="true"><img src="./assets/capture-surveillance-v2.png" alt="" /></div>
+        <div class="success-photo success-photo-close" aria-hidden="true"><img src="./assets/capture-arrest-v2.png" alt="" /></div>
+        <div class="success-message" aria-live="polite" aria-atomic="true">
+          <p id="success-status">LIVE TRACE / PORT-04</p>
+          <h2 id="success-title">Closing on B12.</h2>
+          <span id="success-subtitle">Following GHOST's signal across the city grid.</span>
+        </div>
+        <button class="success-skip" id="success-skip" type="button">View report <span aria-hidden="true">↗</span></button>
+      </section>
+
+      <section id="transition-screen" class="overlay-screen" hidden aria-live="assertive">
+        <div class="transition-card">
+          <p class="eyebrow" id="transition-kicker">PHASE COMPLETE</p>
+          <div class="transition-icon" aria-hidden="true">✓</div>
+          <h2 id="transition-title">Relay located</h2>
+          <p id="transition-copy">The signal leads to the east district camera network.</p>
+          <div class="transition-stats">
+            <span><small>ACCURACY</small><b id="transition-accuracy">96%</b></span>
+            <span><small>BEST STREAK</small><b id="transition-combo">8</b></span>
+          </div>
+          <button class="primary-button compact" id="continue-button" type="button">
+            <span>Continue operation</span><kbd>Enter</kbd>
+          </button>
+        </div>
+      </section>
+
+      <section id="pause-screen" class="overlay-screen" hidden aria-live="polite">
+        <div class="transition-card pause-card">
+          <p class="eyebrow">SYSTEM HOLD</p>
+          <div class="transition-icon pause-icon" aria-hidden="true">Ⅱ</div>
+          <h2>Trace paused</h2>
+          <p>The timer and escape progress are on hold.</p>
+          <button class="primary-button compact" id="resume-button" type="button">
+            <span>Resume trace</span><kbd>Esc</kbd>
+          </button>
+        </div>
+      </section>
+
+      <section id="result-screen" class="screen result-screen" hidden aria-labelledby="result-title">
+        <div class="result-beacon" aria-hidden="true"><span></span><i></i></div>
+        <p class="eyebrow" id="result-kicker">CASE CLOSED // TARGET SECURED</p>
+        <h1 id="result-title">Target secured</h1>
+        <p id="result-copy">GHOST's digital trail is locked. The city grid is secure.</p>
+        <p class="result-mode" id="final-difficulty">OPERATIVE · 1× SCORE</p>
+        <div class="result-score"><span>CASE SCORE</span><strong id="final-score">9,240</strong><em id="final-grade">S</em></div>
+        <div class="result-stats">
+          <div><small>AVG WPM</small><strong id="final-wpm">68</strong></div>
+          <div><small>ACCURACY</small><strong id="final-accuracy">96%</strong></div>
+          <div><small>BEST STREAK</small><strong id="final-combo">18</strong></div>
+          <div><small>TIME</small><strong id="final-time">01:42</strong></div>
+        </div>
+        <div class="result-actions">
+          <button class="primary-button" id="replay-button" type="button">
+            <span>Trace again</span><kbd>Enter</kbd>
+          </button>
+          <button class="secondary-button" id="difficulty-button" type="button">Change difficulty</button>
+        </div>
+      </section>
+    </main>
+
+    <noscript>Cyber Trace needs JavaScript to run.</noscript>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
